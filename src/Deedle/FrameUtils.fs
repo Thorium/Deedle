@@ -104,7 +104,7 @@ module internal Reflection =
 
   /// Given value, return names, types and values of all its IDictionary contents (or None)
   let expandDictionary (value:obj) =
-    if value = null then None else
+    if isNull value then None else
     match value with
     | :? ISeries<string> as sstr ->
         seq { for key in sstr.Index.Keys do
@@ -231,7 +231,7 @@ module internal Reflection =
   /// implements the interface, but we do not know it statically)
   let convertRecordSequenceUntyped(data:System.Collections.IEnumerable) =
     let seqTy = data.GetType().GetInterface("System.Collections.Generic.IEnumerable`1")
-    if seqTy = null then invalidOp "convertRecordSequenceUntyped: Argument must implement seq<T>."
+    if isNull seqTy then invalidOp "convertRecordSequenceUntyped: Argument must implement seq<T>."
     let argTy = seqTy.GetGenericArguments().[0]
     let bindFlags = BindingFlags.NonPublic ||| BindingFlags.Static ||| BindingFlags.Public
     let mi = typeof<ConvertRecordHelper>.GetMethod("ConvertRecordSequence", bindFlags).MakeGenericMethod(argTy)
@@ -276,7 +276,7 @@ module internal FrameUtils =
   // Create flat headers (if there is a hierarchical column index)
   let flattenKeys keys =
     keys |> Seq.map (fun objs ->
-      objs |> Seq.map (fun o -> if o = null then "" else o.ToString())
+      objs |> Seq.map (fun o -> if isNull o then "" else o.ToString())
             |> String.concat " - ")
 
   /// Store data frame to a CSV file using the specified information
@@ -419,12 +419,12 @@ module internal FrameUtils =
     // from C#, we get `Some default(T)` and so we need to check for both here!
     let inferRows = defaultArg inferRows 100
     let schema = defaultArg schema ""
-    let schema = if schema = null then "" else schema
+    let schema = if isNull schema then "" else schema
     let culture = defaultArg culture ""
-    let culture = if culture = null then "" else culture
+    let culture = if isNull culture then "" else culture
     let cultureInfo = System.Globalization.CultureInfo.GetCultureInfo(culture)
     let missingValues = defaultArg missingValues TextConversions.DefaultMissingValues
-    let missingValues = if missingValues = null then TextConversions.DefaultMissingValues else missingValues
+    let missingValues = if isNull missingValues then TextConversions.DefaultMissingValues else missingValues
     let preferOptionals = defaultArg preferOptions false
 
     // Default parameters that cannot be overriden (Frames can always contain NAs)

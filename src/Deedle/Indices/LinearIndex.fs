@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------
 // A concrete implementation of an index. Represents an index where the values are sto-
 // red in an array (or similar structure) with linearly ordered addresses without holes.
 // --------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ type LinearIndex<'K when 'K : equality>
   let mutable lookup = null
 
   let ensureLookup () =
-    if lookup = null then
+    if isNull lookup then
       let dict = Dictionary<'K, Address>()
       let mutable idx = 0L
       for k in keys do

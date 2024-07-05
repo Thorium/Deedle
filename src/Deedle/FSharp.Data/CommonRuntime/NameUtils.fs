@@ -1,4 +1,4 @@
-﻿/// Tools for generating nice member names that follow F# & .NET naming conventions
+/// Tools for generating nice member names that follow F# & .NET naming conventions
 module FSharp.Data.Runtime.NameUtils
 
 open System
@@ -9,6 +9,7 @@ open FSharp.Data.Runtime
 // --------------------------------------------------------------------------------------
 // Active patterns & operators for parsing strings
 
+// Todo: Convert to ValueTuple and [<return: Struct>] when F# 6 is available
 let private tryAt (s:string) i = if i >= s.Length then None else Some s.[i]
 let private sat f (c:option<char>) = match c with Some c when f c -> Some c | _ -> None
 let private (|EOF|_|) c = match c with Some _ -> None | _ -> Some ()
@@ -18,41 +19,59 @@ let private (|Lower|_|) = sat (fun c -> Char.IsLower c || Char.IsDigit c)
 
 // --------------------------------------------------------------------------------------
 
+let inline internal forall predicate (source : ReadOnlySpan<_>) =
+    let mutable state = true
+    let mutable e = source.GetEnumerator()
+    while state && e.MoveNext() do
+        state <- predicate e.Current
+    state
+
 /// Turns a given non-empty string into a nice 'PascalCase' identifier
 let nicePascalName (s:string) =
   if s.Length = 1 then s.ToUpperInvariant() else
   // Starting to parse a new segment
-  let rec restart i = seq {
+  let rec restart i =
     match tryAt s i with
-    | EOF -> ()
-    | LetterDigit _ & Upper _ -> yield! upperStart i (i + 1)
-    | LetterDigit _ -> yield! consume i false (i + 1)
-    | _ -> yield! restart (i + 1) }
+    | EOF -> Seq.empty
+    | LetterDigit _ & Upper _ -> upperStart i (i + 1)
+    | LetterDigit _ -> consume i false (i + 1)
+    | _ -> restart (i + 1)
   // Parsed first upper case letter, continue either all lower or all upper
-  and upperStart from i = seq {
+  and upperStart from i =
     match tryAt s i with
-    | Upper _ -> yield! consume from true (i + 1)
-    | Lower _ -> yield! consume from false (i + 1)
+    | Upper _ -> consume from true (i + 1)
+    | Lower _ -> consume from false (i + 1)
     | _ ->
-        yield from, i
-        yield! restart (i + 1) }
+        let r1 = struct (from, i)
+        let r2 = restart (i + 1)
+        seq {
+          yield r1
+          yield! r2
+        }
   // Consume are letters of the same kind (either all lower or all upper)
-  and consume from takeUpper i = seq {
-    match tryAt s i with
-    | Lower _ when not takeUpper -> yield! consume from takeUpper (i + 1)
-    | Upper _ when takeUpper -> yield! consume from takeUpper (i + 1)
-    | Lower _ when takeUpper ->
-        yield from, (i - 1)
-        yield! restart (i - 1)
+  and consume from takeUpper i = 
+    match takeUpper, tryAt s i with
+    | false, Lower _ -> consume from takeUpper (i + 1)
+    | true, Upper _ -> consume from takeUpper (i + 1)
+    | true, Lower _ ->
+        let r1 = struct (from, (i - 1))
+        let r2 = restart (i - 1)
+        seq {
+          yield r1
+          yield! r2
+        }
     | _ ->
-        yield from, i
-        yield! restart i }
+        let r1 = struct(from, i)
+        let r2 = restart i
+        seq {
+          yield r1
+          yield! r2 }
 
   // Split string into segments and turn them to PascalCase
   seq { for i1, i2 in restart 0 do
-          let sub = s.Substring(i1, i2 - i1)
-          if Array.forall Char.IsLetterOrDigit (sub.ToCharArray()) then
-            yield sub.[0].ToString().ToUpperInvariant() + sub.ToLowerInvariant().Substring(1) }
+          let sub = s.AsSpan(i1, i2 - i1)
+          if forall Char.IsLetterOrDigit sub then
+            yield Char.ToUpperInvariant(sub.[0]).ToString() + sub.Slice(1).ToString().ToLowerInvariant() }
   |> String.Concat
 
 /// Turns a given non-empty string into a nice 'camelCase' identifier

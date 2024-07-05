@@ -96,7 +96,7 @@ type Frame =
       (if inferTypes.HasValue then Some inferTypes.Value else None)
       (if inferRows.HasValue then Some inferRows.Value else None)
       (Some schema) (Some missingValues)
-      (if separators = null then None else Some separators) (Some culture)
+      (if isNull separators then None else Some separators) (Some culture)
       (if maxRows.HasValue then Some maxRows.Value else None)
       (Some preferOptions)
 
@@ -137,7 +137,7 @@ type Frame =
       (if inferTypes.HasValue then Some inferTypes.Value else None)
       (if inferRows.HasValue then Some inferRows.Value else None)
       (Some schema) (Some missingValues)
-      (if separators = null then None else Some separators) (Some culture)
+      (if isNull separators then None else Some separators) (Some culture)
       (if maxRows.HasValue then Some maxRows.Value else None)
       (if preferOptions.HasValue then Some preferOptions.Value else None)
 
@@ -979,7 +979,7 @@ type FrameExtensions =
   /// [category:Data structure manipulation]
   [<Extension>]
   static member Nest(frame:Frame<Tuple<'TRowKey1, 'TRowKey2>, 'TColumnKey>) =
-    frame |> Frame.mapRowKeys (fun t -> t) |> Frame.nest
+    frame |> Frame.mapRowKeys id |> Frame.nest
 
   /// Given a data frame whose row index has two levels, create a series
   /// whose keys are the unique results of the keyselector projection, and
@@ -1021,7 +1021,7 @@ type FrameExtensions =
   [<Extension>]
   static member SaveCsv(frame:Frame<'R, 'C>, writer: TextWriter, [<Optional>] includeRowKeys, [<Optional>] keyNames, [<Optional>] separator, [<Optional>] culture) =
     let separator = if separator = '\000' then None else Some separator
-    let culture = if culture = null then None else Some culture
+    let culture = if isNull culture then None else Some culture
     let keyNames = if keyNames = Unchecked.defaultof<_> then None else Some keyNames
     FrameUtils.writeCsv (writer) None separator culture (Some includeRowKeys) keyNames frame
 
@@ -1042,7 +1042,7 @@ type FrameExtensions =
   [<Extension>]
   static member SaveCsv(frame:Frame<'R, 'C>, path:string, [<Optional>] includeRowKeys, [<Optional>] keyNames, [<Optional>] separator, [<Optional>] culture) =
     let separator = if separator = '\000' then None else Some separator
-    let culture = if culture = null then None else Some culture
+    let culture = if isNull culture then None else Some culture
     let keyNames = if keyNames = Unchecked.defaultof<_> then None else Some keyNames
     use writer = new StreamWriter(path)
     FrameUtils.writeCsv writer (Some path) separator culture (Some includeRowKeys) keyNames frame
@@ -1064,7 +1064,7 @@ type FrameExtensions =
   static member SaveCsv(frame:Frame<'R, 'C>, path:string, keyNames, [<Optional>] separator, [<Optional>] culture) =
     use writer = new StreamWriter(path)
     let separator = if separator = '\000' then None else Some separator
-    let culture = if culture = null then None else Some culture
+    let culture = if isNull culture then None else Some culture
     FrameUtils.writeCsv writer (Some path) separator culture (Some true) (Some keyNames) frame
 
   /// Returns the data of the frame as a .NET `DataTable` object. The column keys are
@@ -1395,7 +1395,7 @@ type FrameExtensions =
   [<Extension; Obsolete("Use overload taking TextWriter instead")>]
   static member SaveCsv(frame:Frame<'R, 'C>, stream:Stream, [<Optional>] includeRowKeys, [<Optional>] keyNames, [<Optional>] separator, [<Optional>] culture) =
     let separator = if separator = '\000' then None else Some separator
-    let culture = if culture = null then None else Some culture
+    let culture = if isNull culture then None else Some culture
     let keyNames = if keyNames = Unchecked.defaultof<_> then None else Some keyNames
     use writer = new StreamWriter(stream)
     FrameUtils.writeCsv (writer) None separator culture (Some includeRowKeys) keyNames frame

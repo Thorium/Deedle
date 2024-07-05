@@ -835,7 +835,7 @@ and
     let ks key =  x.TryGet(key) |> OptionalValue.map (fun v -> keySelector.Invoke(KeyValuePair(key, v)))
     let cmd = indexBuilder.GroupBy(index, ks, VectorConstruction.Return 0)
     let newIndex  = Index.ofKeys (cmd |> ReadOnlyCollection.map fst)
-    let newGroups = cmd |> Seq.map snd |> Seq.map (fun sc ->
+    let newGroups = cmd |> Seq.map (snd >> fun sc ->
         Series(fst sc, vectorBuilder.Build(newIndex.AddressingScheme, snd sc, [| x.Vector |]), vectorBuilder, indexBuilder))
     Series<'TNewKey, _>(newIndex, Vector.ofValues newGroups, vectorBuilder, indexBuilder)
 

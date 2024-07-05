@@ -1,4 +1,4 @@
-﻿namespace FSharp.Data.Runtime
+namespace FSharp.Data.Runtime
 
 open System
 open System.Globalization
@@ -19,7 +19,7 @@ type TextRuntime =
     then CultureInfo.InvariantCulture
     else
       let mutable cache = TextRuntime.cultureInfoCache
-      if cache = null then
+      if isNull cache then
         cache                         <- Collections.Generic.Dictionary<string, CultureInfo> ()
         TextRuntime.cultureInfoCache  <- cache
       match cache.TryGetValue cultureStr with

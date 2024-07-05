@@ -820,7 +820,7 @@ module Seq =
       // Walk over all windows; use 'f' to determine if the item
       // should be added - if so, add it, otherwise yield window
       let win = ref windows.First
-      while win.Value <> null do
+      while not (isNull win.Value) do
         let start, items = win.Value.Value
         let next = win.Value.Next
         if f start v then win.Value.Value <- start, v::items
@@ -1004,7 +1004,7 @@ module Seq =
       // Walk over all windows; use 'f' to determine if the item
       // should be added - if so, add it, otherwise yield window
       let win = ref windows.First
-      while win.Value <> null do
+      while not (isNull win.Value) do
         let value, startIdx, endIdx = win.Value.Value
         let next = win.Value.Next
         if f value v then win.Value.Value <- value, startIdx, !index
@@ -1467,7 +1467,7 @@ module Convert =
         else System.Convert.ChangeType(value, typeof<'T>) :?> 'T
     | ConversionKind.Safe ->
         if value :? 'T then value :?> 'T
-        elif value <> null then
+        elif not (isNull value) then
           match sourcesByTarget.TryGetValue(typeof<'T>) with
           | true, sources when sources.ContainsKey(value.GetType()) ->
               System.Convert.ChangeType(value, typeof<'T>) :?> 'T

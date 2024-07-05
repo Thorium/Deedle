@@ -1662,8 +1662,7 @@ and Frame<'TRowKey, 'TColumnKey when 'TRowKey : equality and 'TColumnKey : equal
           |> Seq.zip offsets                                // seq of (srcloc, label)
           |> Seq.zip frame.RowKeys                          // seq of (rowkey, (srcloc, label))
           |> Seq.groupBy (fun (rk, (i, l)) -> l)            // seq of (label, seq of (rowkey, (srcloc, label)))
-          |> Seq.map (fun (k, s) -> s)                      // seq of (seq of (rowkey, (srcloc, label)))
-          |> Seq.concat                                     // seq of (rowkey, (srcloc, label))
+          |> Seq.collect (fun (k, s) -> s)                  // seq of (rowkey, (srcloc, label))
           |> Seq.zip offsets                                // seq of (dstloc, (rowkey, (srcloc, label)))
           |> Seq.map (fun (dst, (rowkey, (src, grp))) ->
              (grp, rowkey), (dst, src))                     // seq of (label, rowkey), (dstloc, srcloc)

@@ -1,4 +1,4 @@
-﻿module Deedle.Excel
+module Deedle.Excel
 
 open Deedle
 
@@ -87,21 +87,21 @@ let openNewExcelApplication () =
     excelApp
 
 let private assertInstance () =
-    if excelApp <> null then
+    if not (isNull excelApp) then
         let wbs = excelApp.Workbooks
         if wbs.Count = 0 then
             wbs.Add(Enums.XlWBATemplate.xlWBATWorksheet) |> ignore
 
-        if excelApp = null then
+        if isNull excelApp then
             openNewExcelApplication () |> ignore
-        elif activeWb <> null then
+        elif not (isNull activeWb) then
             activeWb.Activate()
 
 let private openWorkbook (readonly : bool) filename =
     excelApp.get_Workbooks().Open(filename, null, readonly)
 
 let getActiveWorkbook () =
-    if activeWb = null then
+    if isNull activeWb then
         excelApp.ActiveWorkbook
     else
         activeWb
@@ -146,7 +146,7 @@ let getRealRange (range : obj) =
     assertInstance ()
     match range with
     | :? string as str ->
-        let idx = str.IndexOf("!")
+        let idx = str.IndexOf '!'
         if idx > 0 then switchSheet (str.Substring(0, idx))
     |  _ -> ()
     excelApp.Range(range)
@@ -171,7 +171,7 @@ let private unionRanges r1 r2 =
     RealExcel (excelApp.Union(real1, real2))
 
 let private putArray isH (arr : obj [,]) startRange =
-    if arr = null || Array2D.length1 arr = 0 || Array2D.length2 arr = 0 then
+    if isNull arr || Array2D.length1 arr = 0 || Array2D.length2 arr = 0 then
         startRange
     else
         let (height, width) = arr |> arraySize
@@ -330,7 +330,7 @@ module internal XlHelper =
                 |> aptest showCols (putArray false t.ColumnHeaders)
                 |> putArray false t.DataArray
                 |> aptest showRows (moveLeftCols 1 >> skipHistory 1)
-                |> aptest (tableStyle <> null) (applyToHistory (fun r->
+                |> aptest (not (isNull tableStyle)) (applyToHistory (fun r->
                     ExcelStyles.ApplyTableStyle(r,tableStyle, showFilter, showRows)))
 
     // ----------------------------------------------------------------------------------------
@@ -361,7 +361,7 @@ module internal XlHelper =
       | _ -> box ""
 
     let formatExcelHeader (value:obj) =
-      if value = null then box "" else
+      if isNull value then box "" else
       match formatMap.TryGetValue(value.GetType()) with
       | true, f -> f value
       | _ -> box (value.ToString())
@@ -404,7 +404,7 @@ type Xl =
          for cf in fs do
             for c in cf.Columns do
                  let colRange = range.Find(c,null,null,Enums.XlLookAt.xlWhole,null)
-                 if colRange <> null then
+                 if not (isNull colRange) then
                      {state with LastRange = (RealExcel  (colRange |> resize(rows,1)))} |> cf.Format |> ignore
          state
 
@@ -415,7 +415,7 @@ type Xl =
          for cf in fs do
             for c in cf.Columns do
                  let colRange = range.Find(c,null,null,Enums.XlLookAt.xlWhole,null)
-                 if colRange <> null then
+                 if not (isNull colRange) then
                      {state with LastRange = (RealExcel  colRange.EntireColumn)} |> cf.Format |> ignore
          state
 
@@ -447,7 +447,7 @@ type Xl =
          let range = (lastRange |> convertRange)
          for cd in ds do
             let colRange = range.Find(cd.Column,null,null,Enums.XlLookAt.xlWhole,null)
-            if colRange <> null then
+            if not (isNull colRange) then
                 let c = colRange.AddComment(cd.Description)
                 c.Visible <- false
                 c.Shape.TextFrame.AutoSize <- true
@@ -459,7 +459,7 @@ type Xl =
          let range = (lastRange |> convertRange)
          let startRange = range.Find(cStart,null,null,Enums.XlLookAt.xlWhole,null)
          let endRange = range.Find(cEnd,null,null,Enums.XlLookAt.xlWhole,null)
-         if startRange <> null && endRange <> null then
+         if not( isNull startRange) && not (isNull endRange) then
              let startAddress = startRange.Address
              let endAddress = endRange.Address
              let r = getRealRange (startAddress + ":" + endAddress)
@@ -528,7 +528,7 @@ type DynamicExcel(app, ?keepInSync) =
         and set (choice) = keepInSync <- choice
 
     member private this.createInstance() =
-        if localExcelApp = null then
+        if isNull localExcelApp then
             localExcelApp <- openNewExcelApplication()
         else
             ()
@@ -644,7 +644,7 @@ let GetFsiSeriesAndFrames (knownTypes : ICollection<Type>) =
                                 && pi.PropertyType <> typeof<Unit>
                                 then
                             let pv = pi.GetValue(null, Array.empty)
-                            if pv <> null then
+                            if not (isNull pv) then
                                 match pv with
                                 | GenericSeries argTypes | GenericFrame argTypes ->
                                     yield { name = pi.Name; type_ = pi.PropertyType; value = pi.GetValue(null, Array.empty); }

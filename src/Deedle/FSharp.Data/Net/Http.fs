@@ -1199,7 +1199,7 @@ module private HttpHelpers =
             source.Dispose ()
         }
 
-    let runningOnMono = try System.Type.GetType("Mono.Runtime") <> null with e -> false
+    let runningOnMono = try not(isNull (System.Type.GetType "Mono.Runtime")) with e -> false
 
     let writeBody (req:HttpWebRequest) (data: Stream) =
         async {
@@ -1212,7 +1212,7 @@ module private HttpHelpers =
     let reraisePreserveStackTrace (e:Exception) =
         try
             let remoteStackTraceString = typeof<exn>.GetField("_remoteStackTraceString", BindingFlags.Instance ||| BindingFlags.NonPublic);
-            if remoteStackTraceString <> null then
+            if not (isNull remoteStackTraceString) then
                 remoteStackTraceString.SetValue(e, e.StackTrace + Environment.NewLine)
         with _ -> ()
         raise e
@@ -1223,7 +1223,7 @@ module private HttpHelpers =
         with
             // If an exception happens, augment the message with the response
             | :? WebException as exn ->
-              if exn.Response = null then reraisePreserveStackTrace exn
+              if isNull exn.Response then reraisePreserveStackTrace exn
               let responseExn =
                   try
                     let newResponse = new WebResponse(exn.Response)
@@ -1332,7 +1332,7 @@ module private HttpHelpers =
                         return! getResponseAsync req
                     with
                         | :? WebException as exc ->
-                            if exc.Response <> null then
+                            if not (isNull exc.Response) then
                                return exc.Response
                             else
                                 reraisePreserveStackTrace exc
@@ -1601,14 +1601,14 @@ type Http private() =
             let cookies = CookieHandling.getCookiesAndManageCookieContainer uri resp.ResponseUri headers cookieContainer
                                                                             addCookiesFromHeadersToCookieContainer (defaultArg silentCookieErrors false)
 
-            let contentType = if resp.ContentType = null then "application/octet-stream" else resp.ContentType
+            let contentType = if isNull resp.ContentType then "application/octet-stream" else resp.ContentType
 
             let statusCode, characterSet =
                 match resp with
                 | :? HttpWebResponse as resp -> int resp.StatusCode, resp.CharacterSet
                 | _ -> 0, ""
 
-            let characterSet = if characterSet = null then "" else characterSet
+            let characterSet = if isNull characterSet then "" else characterSet
 
             let stream = resp.GetResponseStream()
 

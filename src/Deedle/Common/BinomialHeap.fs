@@ -1,4 +1,4 @@
-﻿/// Purely functional Binomial Heap implementation
+/// Purely functional Binomial Heap implementation
 /// Based on: http://cs.hubfs.net/topic/None/56608
 ///
 /// Characteristics:
@@ -40,7 +40,7 @@ module BinomialHeap =
     { Comparer = comparer; Heap = [] }
 
   /// Returns true when the specified heap is emtpy
-  let isEmpty heap = heap.Heap = []
+  let isEmpty heap = List.isEmpty heap.Heap
 
   /// Returns the rank of the specified tree node
   let internal rank (Node (r,_,_)) = r

@@ -63,7 +63,7 @@ open FSharp.Charting.ChartTypes
 /// Extract values from any series using reflection
 let (|SeriesValues|_|) (value:obj) = 
   let iser = value.GetType().GetInterface("ISeries`1")
-  if iser <> null then
+  if not (isNull iser) then
     let keys = value.GetType().GetProperty("Keys").GetValue(value) :?> System.Collections.IEnumerable
     let vector = value.GetType().GetProperty("Vector").GetValue(value) :?> IVector
     Some(Seq.zip (Seq.cast<obj> keys) vector.ObjectSequence)

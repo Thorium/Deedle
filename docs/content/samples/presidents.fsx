@@ -85,7 +85,7 @@ let presidentTerms =
     if string pos.``Basic title`` = "President" then
       // Get start and end year of the position
       let starty = DateTime.Parse(pos.From).Year
-      let endy = if pos.To = null then 2013 else
+      let endy = if isNull pos.To then 2013 else
                    DateTime.Parse(pos.To).Year
       // Get their party
       let dem = pres.Party |> Seq.exists (fun p -> p.Party.Name = "Democratic Party")

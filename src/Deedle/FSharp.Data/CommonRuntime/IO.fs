@@ -1,4 +1,4 @@
-﻿/// Helper functions called from the generated code for working with files
+/// Helper functions called from the generated code for working with files
 module FSharp.Data.Runtime.IO
 
 open System
@@ -7,6 +7,7 @@ open System.IO
 open System.Text
 open FSharp.Data
 
+[<Struct>]
 type internal UriResolutionType =
     | DesignTime
     | Runtime

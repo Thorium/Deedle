@@ -295,7 +295,7 @@ let tryConvertType<'R> conversionKind (vector:IVector) : OptionalValue<IVector<'
             let first =
               col.DataSequence
               |> Seq.choose (fun v ->
-                  if v.HasValue && (box v.Value) <> null
+                  if v.HasValue && not(isNull (box v.Value))
                   then Some (box v.Value) else None)
               |> Seq.headOrNone
               |> Option.map (Convert.canConvertType<'R> conversionKind)
@@ -434,6 +434,7 @@ module Inference =
   // type, we choose 'int', 'int64', 'float' (for numbers) or 'string' (for strings and characters)
   // In principle, we could do better and find "least upper bound" of the conversion relation
   // but choosing one of the common types seems to be good enough.
+  /// Could utilize some [<return Struct>] when F# 6
   let inline isType types t = if List.exists ((=) t) types then Some() else None
   let intTypes = [ typeof<byte>; typeof<sbyte>; typeof<int16>; typeof<uint16>; typeof<int> ]
   let int64Types = intTypes @ [ typeof<uint32>; typeof<int64> ]
@@ -441,7 +442,7 @@ module Inference =
   let stringTypes = [ typeof<char>; typeof<string> ]
 
   /// Classsify type as one of the supported primitives
-  let (|Top|_|) (ty:System.Type) = if ty = null then Some() else None
+  let (|Top|_|) (ty:System.Type) = if isNull ty then Some() else None
   let (|Bottom|_|) ty = if ty = typeof<obj> then Some() else None
   let (|AsInt|_|) ty = isType intTypes ty
   let (|AsInt64|_|) ty = isType int64Types ty
@@ -496,7 +497,7 @@ let findCommonSupertype types =
 /// Given object array, create a typed vector of the best possible type
 let createInferredTypeVector (builder:IVectorBuilder) (data:obj[]) =
   let vectorType = data |> Seq.map (fun v ->
-    if v = null then Inference.Top else v.GetType()) |> findCommonSupertype
+    if isNull v then Inference.Top else v.GetType()) |> findCommonSupertype
   createTypedVector builder vectorType data
 
 // --------------------------------------------------------------------------------------
