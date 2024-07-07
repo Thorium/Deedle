@@ -42,11 +42,9 @@ let nicePascalName (s:string) =
     | Upper _ -> consume from true (i + 1)
     | Lower _ -> consume from false (i + 1)
     | _ ->
-        let r1 = struct (from, i)
-        let r2 = restart (i + 1)
         seq {
-          yield r1
-          yield! r2
+          yield struct (from, i)
+          yield! restart (i + 1)
         }
   // Consume are letters of the same kind (either all lower or all upper)
   and consume from takeUpper i = 
@@ -54,18 +52,14 @@ let nicePascalName (s:string) =
     | false, Lower _ -> consume from takeUpper (i + 1)
     | true, Upper _ -> consume from takeUpper (i + 1)
     | true, Lower _ ->
-        let r1 = struct (from, (i - 1))
-        let r2 = restart (i - 1)
         seq {
-          yield r1
-          yield! r2
+          yield struct (from, (i - 1))
+          yield! restart (i - 1)
         }
     | _ ->
-        let r1 = struct(from, i)
-        let r2 = restart i
         seq {
-          yield r1
-          yield! r2 }
+          yield struct(from, i)
+          yield! restart i }
 
   // Split string into segments and turn them to PascalCase
   seq { for i1, i2 in restart 0 do
